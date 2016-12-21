@@ -1,70 +1,70 @@
 class Users::PasswordsController < Devise::PasswordsController
-    prepend_before_action :require_no_authentication
-    # Render the #edit only if coming from a reset password email link
-    append_before_action :assert_reset_token_passed, only: :edit
+    # prepend_before_action :require_no_authentication
+    # # Render the #edit only if coming from a reset password email link
+    # append_before_action :assert_reset_token_passed, only: :edit
+    respond_to :json
 
 
     def create
-      self.resource = resource_class.send_reset_password_instructions(password_params)
-
-      UserNotifier.send_instructions_email(resource).deliver
-
-      yield resource if block_given?
-
-      if successfully_sent?(resource)
+      if self.resource = resource_class.send_reset_password_instructions(password_params)
         message = find_message(:send_instructions)
-        render json: {:success => true, :data => {:message => message}}
+        return  render json: {:success => true, :data => {:message => message}}
       else
         messages = resource.errors.messages
-        render json: {:success => false, :data => {:message => messages}}
+        return render json: {:success => false, :data => {:message => messages}}
       end
     end
 
     # GET /resource/password/edit?reset_password_token=abcdef
-    def edit
-      self.resource = resource_class.new
-      set_minimum_password_length
-      resource.reset_password_token = params[:reset_password_token]
-    end
+    # def edit
+    #   self.resource = resource_class.new
+    #   set_minimum_password_length
+    #   resource.reset_password_token = params[:reset_password_token]
+    # end
 
-    # PUT /resource/password
+
     def update
-      self.resource = resource_class.reset_password_by_token(resource_params)
+      self.resource = resource_class.reset_password_by_token(password_params)
+      byebug
+
       yield resource if block_given?
 
       if resource.errors.empty?
-        resource.unlock_access! if unlockable?(resource)
+
         if Devise.sign_in_after_reset_password
-          flash_message = resource.active_for_authentication? ? :updated : :updated_not_active
-          set_flash_message!(:notice, flash_message)
+          
+          message = find_message(resource.active_for_authentication? ? :updated : :updated_not_active)
           sign_in(resource_name, resource)
+          return render :json => {:message => message}
         else
-          set_flash_message!(:notice, :updated_not_active)
+          message = find_message(:notice, :updated_not_active)
+          return render :json => {:message => message}
         end
         respond_with resource, location: after_resetting_password_path_for(resource)
       else
-        set_minimum_password_length
+        messages = resource.errors.messages
+        return render :json => {:message => messages}
         respond_with resource
       end
     end
 
-    protected
-      def after_resetting_password_path_for(resource)
-        Devise.sign_in_after_reset_password ? after_sign_in_path_for(resource) : new_session_path(resource_name)
-      end
 
-      # The path used after sending reset password instructions
-      def after_sending_reset_password_instructions_path_for(resource_name)
-        new_session_path(resource_name) if is_navigational_format?
-      end
-
-      # Check if a reset_password_token is provided in the request
-      def assert_reset_token_passed
-        if params[:reset_password_token].blank?
-          set_flash_message(:alert, :no_token)
-          redirect_to new_session_path(resource_name)
-        end
-      end
+      # def after_resetting_password_path_for(resource)
+      #   Devise.sign_in_after_reset_password ? after_sign_in_path_for(resource) : new_session_path(resource_name)
+      # end
+      #
+      # # The path used after sending reset password instructions
+      # def after_sending_reset_password_instructions_path_for(resource_name)
+      #   new_session_path(resource_name) if is_navigational_format?
+      # end
+      #
+      # # Check if a reset_password_token is provided in the request
+      # def assert_reset_token_passed
+      #   if params[:reset_password_token].blank?
+      #     set_flash_message(:alert, :no_token)
+      #     redirect_to new_session_path(resource_name)
+      #   end
+      # end
 
       # Check if proper Lockable module methods are present & unlock strategy
       # allows to unlock resource on password reset
@@ -79,6 +79,6 @@ class Users::PasswordsController < Devise::PasswordsController
       # end
 
       def password_params
-        params.require(:password).permit(:email)
+        params.require(:password).permit(:email, :password, :password_confirmation, :reset_password_token)
       end
 end

@@ -6,7 +6,6 @@ class Users::SessionsController < Devise::SessionsController
   def create
     session['user_auth'] = params[:user]
 
-    # resource = warden.authenticate!(:scope => resource_name, :recall => "#{controller_path}#failure")
     resource = User.find_by_email params[:user][:email]
 
 
@@ -21,7 +20,7 @@ class Users::SessionsController < Devise::SessionsController
       else
 
         message = I18n.t 'devise.failure.unconfirmed'
-        render :json => {:success => false, :login => true,:message => message }
+        return render :json => {:success => false, :login => false,:message => message }
       end
     else
       resource = warden.authenticate!(:scope => resource_name, :recall => "#{controller_path}#failure")

@@ -4,13 +4,13 @@ class Users::RegistrationsController < Devise::RegistrationsController
   def create
     build_resource(sign_up_params)
     resource.save
+
     yield resource if block_given?
 
     if resource.persisted?
       if resource.active_for_authentication?
         message = find_message(:signed_up)
         sign_up(resource_name, resource)
-        # UserNotifier.send_signup_email(resource).deliver
         UserMailer.registration_confirmation(resource).deliver
         return render :json => {:success => true, :data =>  {:message => message}}
       else

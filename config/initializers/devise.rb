@@ -15,9 +15,6 @@ Devise.setup do |config|
   config.mailer_sender = 'please-change-me-at-config-initializers-devise@example.com'
 
 
-  # config devise
-  config.allow_unconfirmed_access_for = true
-
   # Configure the class responsible to send e-mails.
   # config.mailer = 'Devise::Mailer'
 
