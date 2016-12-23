@@ -10,7 +10,7 @@ class Users::SessionsController < Devise::SessionsController
 
 
     if resource && resource.valid_password?(params[:user][:password])
-      if resource.confirmed?
+      if resource.confirmed? 
         sign_in(resource_name, resource)
         message = I18n.t 'devise.sessions.signed_in'
 

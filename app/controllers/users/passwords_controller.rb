@@ -32,7 +32,7 @@ class Users::PasswordsController < Devise::PasswordsController
       if resource.errors.empty?
 
         if Devise.sign_in_after_reset_password
-          
+
           message = find_message(resource.active_for_authentication? ? :updated : :updated_not_active)
           sign_in(resource_name, resource)
           return render :json => {:message => message}
